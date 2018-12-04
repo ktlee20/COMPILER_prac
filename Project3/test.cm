@@ -1,0 +1,18 @@
+int test(void)
+{
+	void a;
+	koko = 5;
+	ppp();
+}
+
+int main(void)
+{
+	int x[10];
+	x = 3;
+	return;
+}
+
+void tmain(void)
+{
+	return 0;
+}
