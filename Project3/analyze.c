@@ -332,10 +332,10 @@ static void checkNode(TreeNode *t)
 					TreeNode * left = t->child[0];
 					TreeNode * right = t->child[1];
 					BucketList l = bc_lookup(SPeek(stack), left->attr.name);
-					
+
 					if(l == NULL)	
 						break;				
-	
+
 					if(l->type == IntArray && left->child[0] == NULL)
 					{
 						typeError(t, "cannot assign");
@@ -355,10 +355,34 @@ static void checkNode(TreeNode *t)
 				}
 				break;
 				case OpK:
+				{
+					TreeNode * left = t->child[0];
+					TreeNode * right = t->child[1];
+					BucketList l = bc_lookup(SPeek(stack), left->attr.name);
+					BucketList r = bc_lookup(SPeek(stack), right->attr.name);	
+				
+					if(l == NULL)	
+						break;				
+	
+					if(r == NULL)
+						break;
+
+					if(l->type == IntArray && left->child[0] == NULL)
+					{
+						typeError(t, "cannot op");
+						break;
+					}
+					if(r->type == IntArray && right->child[0] == NULL)
+					{
+						typeError(t, "cannot op");
+						break;
+					}
+
 					if(t->child[0]->type == Void || t->child[1]->type == Void)
 						typeError(t, "operands should be non-void");
 					else
 						t->type = Int;
+				}
 				break;
 				case ConstK:
 					t->type = Int;
