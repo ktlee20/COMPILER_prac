@@ -1,9 +1,56 @@
+void idxtest(void)
+{
+	return;
+}
+/*noerror*/
+
+
+int idxtestb(void)
+{
+	return 1;
+}
+/*noerror*/
+
+int atest(void)
+{
+	int a;
+	int x[10];
+
+	a = x[idxtest()];
+	a = x[idxtestb()];
+
+	x[idxtest()] = a;
+	x[idxtestb()] = a;
+}
+/*19,22 error*/
+
+int x;
+
+int xtest(void)
+{
+	int x;
+	{
+		int x;
+	}
+	x = 3;
+	y = 2;
+	return x;
+}
+/*36 error*/
+
+void xtest(void)
+{
+	return;
+}
+/*41 error*/
+
 int test(void)
 {
 	void a;
 	koko = 5;
 	ppp();
 }
+/*49 50 51 error*/
 
 int main(void)
 {
@@ -11,11 +58,14 @@ int main(void)
 	int a;
 	x = 3;
 	a = x[0];
+
 	a = x + x;
 	return;
 }
+/*59 62 63 error */
 
 void tmain(void)
 {
 	return 0;
 }
+/* 69 error */

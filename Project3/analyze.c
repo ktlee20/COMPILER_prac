@@ -46,11 +46,11 @@ static void reserveIO(void)
 	temp = newDeclNode(FuncK);
 
 	temp->lineno = 0;
-	temp->type = Int;		
+	temp->type = Void;		
 	temp->attr.name = "output";
 
 	temp->child[0] = newTypeNode(FuncK);
-	temp->child[0]->attr.type = INT;
+	temp->child[0]->attr.type = Void;
 
 	temp->child[1] = newDeclNode(ParK);
 	temp->child[1]->attr.name = "arg";
@@ -61,7 +61,7 @@ static void reserveIO(void)
 	temp->child[2]->child[0] = NULL;
 	temp->child[2]->child[1] = NULL;
 
-	bc_insert("~","output",Int, 0, process_locate("~"), temp);
+	bc_insert("~","output",Void, 0, process_locate("~"), temp);
 	sc_insert("output", temp);
 	bc_insert("output","arg",Int,0,process_locate("output"), temp);
 }
@@ -341,11 +341,16 @@ static void checkNode(TreeNode *t)
 						typeError(t, "cannot assign");
 						break;
 					}
-					if(l->type == IntArray && right->child[0] == NULL)
+					if(l->type == IntArray && right->type == Void)
 					{
 						typeError(t, "cannot assign");
 						break;
 					}
+					/*if(l->type == IntArray && right->child[0] == NULL)
+					{
+						typeError(t, "cannot assign");
+						break;
+					}*/
 					if(t->child[1]->type == Void)
 					{
 						typeError(t->child[1], "cannot assign void");
@@ -448,8 +453,8 @@ static void checkNode(TreeNode *t)
 						par2 = par2->sibling;
 					}
 			
-					if(par1 == NULL && par2 != NULL)
-						typeError(t->child[0], "parameter number doesn't match");
+					if(par1 == NULL && (par2 != NULL && par2->type != Void))
+						typeError(t, "parameter number doesn't match");
 
 					t->type = l->t->type;
 				}
