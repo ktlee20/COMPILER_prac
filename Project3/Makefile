@@ -1,6 +1,6 @@
 CC = gcc
 
-CFLAGS =
+CFLAGS = -g -static
 
 OBJS_FLEX = main.o util.o lex.yy.o y.tab.o symtab.o analyze.o
 

@@ -55,7 +55,7 @@ typedef struct ScopeListRec
 extern Scope ScopeList[SIZE];
 extern Stack *stack;
 
-static int hash( char * key);
+int hash( char * key);
 void SInit(Stack ** s);
 void SPush(Stack * s, SData data);
 SData SPop(Stack * s);

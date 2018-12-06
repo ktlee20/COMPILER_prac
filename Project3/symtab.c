@@ -7,8 +7,7 @@
 Scope ScopeList[SIZE];
 Stack * stack;
 
-/* the hash function  */
-static int hash(char * key)
+int hash(char * key)
 {
 	int temp = 0;
 	int i =0;
@@ -169,6 +168,7 @@ Scope sc_insert(char * name, TreeNode * t)
 	s->parent = (pname == NULL) ? NULL : ScopeList[hash(pname)];
 	for(i = 0 ; i < SIZE ; i++)
 		s->bucket[i] = NULL;
+	
 
 	ScopeList[h] = s;
 

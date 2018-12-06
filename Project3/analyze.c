@@ -16,7 +16,12 @@ static void traverse(TreeNode * t, void(*preProc) (TreeNode*), void (*postProc) 
 		{
 			int i;
 			for(i = 0 ; i < MAXCHILDREN ; i++)
+			{
+				funexist = 0;
 				traverse(t->child[i],preProc, postProc);
+				if(funexist)
+					break;
+			}
 		}
 		postProc(t);
 		traverse(t->sibling, preProc, postProc);
@@ -85,25 +90,24 @@ static void insertNode( TreeNode * t)
 			switch (t->kind.stmt)
 			{
 				case CompK:
-				case IfK:
-				case IterK:
-					if(scopemade)
+					if(scopemade || funexist)
 					{
 						scopemade = 0;
-					}
-					else if(funexist)
-					{
 						funexist = 0;
 					}
 					else
 					{
 						Scope s;
+						BucketList l;
+						int h = hash(funname);
+						s = ScopeList[h]->parent;
+						l = s->bucket[h];	
 						name = (char*)malloc(sizeof(char) * 256);
 						strcpy(name, funname);
 						sprintf(name,"%s:%d",name,t->lineno);
-						s = sc_insert(name, t);
-						scopemade = 1;
 						funname = name;
+						bc_insert(SPeek(stack), funname, l->type, t->lineno, process_locate(SPeek(stack)), t);
+						s = sc_insert(name, t);
 						SPush(stack, funname);
 					}
 					t->attr.scope = SPeek(stack);
@@ -204,7 +208,7 @@ static void insertNode( TreeNode * t)
 						symbolError(t->child[0], "void parameter");
 					t->type = IntArray;
 					if(bc_lookup_excluding_parent(SPeek(stack), t->attr.name) == NULL)
-						bc_insert(SPeek(stack), t->attr.name, Int, t->lineno, process_locate(SPeek(stack)), t);
+						bc_insert(SPeek(stack), t->attr.name, IntArray, t->lineno, process_locate(SPeek(stack)), t);
 					else
 						symbolError(t, "symbol already exists");
 				}
@@ -234,7 +238,11 @@ static void pop_scope(TreeNode * t)
 			switch(t->kind.stmt)
 			{
 				case CompK:
-					SPop(stack);
+					if(funexist)
+						funexist = 0;
+					else
+						SPop(stack);
+					funname = SPeek(stack);
 				break;
 				default:
 				break;
@@ -257,6 +265,11 @@ void buildSymtab(TreeNode * syntaxTree)
 	reserveIO();
 	traverse(syntaxTree,insertNode ,pop_scope);
 	SPop(stack);
+	if(TraceAnalyze)
+	{
+		fprintf(listing, "\nSymbol table:\n\n");
+		printSymTab(listing);
+	}
 }
 
 static void push_scope(TreeNode *t)
@@ -338,19 +351,9 @@ static void checkNode(TreeNode *t)
 						typeError(t, "cannot assign");
 						break;
 					}
-					if(l->type == IntArray && right->type == Void)
+					if(right->type == Void)
 					{
 						typeError(t, "cannot assign");
-						break;
-					}
-					/*if(l->type == IntArray && right->child[0] == NULL)
-					{
-						typeError(t, "cannot assign");
-						break;
-					}*/
-					if(t->child[1]->type == Void)
-					{
-						typeError(t->child[1], "cannot assign void");
 						break;
 					}
 					t->type = t->child[0]->type;
@@ -360,14 +363,28 @@ static void checkNode(TreeNode *t)
 				{
 					TreeNode * left = t->child[0];
 					TreeNode * right = t->child[1];
-					BucketList l = bc_lookup(SPeek(stack), left->attr.name);
-					BucketList r = bc_lookup(SPeek(stack), right->attr.name);	
-				
-					if(l == NULL)	
-						break;				
+					BucketList l;					
+					BucketList r;
+					
+					if(left->kind.exp == ConstK || left->kind.exp == OpK)
+						l = NULL;
+					else
+						l = bc_lookup(SPeek(stack), left->attr.name);
+
+
+					if(right->kind.exp == ConstK || right->kind.exp == OpK)
+						r = NULL;
+					else
+						r = bc_lookup(SPeek(stack), right->attr.name);	
 	
-					if(r == NULL)
+					if(right->type == Int && left->type == Int)
+					{
+						t->type = Int;
 						break;
+					}
+					
+					if(l == NULL || r == NULL)
+						break;					
 
 					if(l->type == IntArray && left->child[0] == NULL)
 					{
@@ -412,7 +429,10 @@ static void checkNode(TreeNode *t)
 					if(t->child[0]->type != Int)
 						typeError(t, "index should be integer");			
 					else
+					{
 						t->type = IntArray;
+						l->type = Int;
+					}
 				}
 				break;
 				case CallK:
@@ -473,9 +493,4 @@ void typeCheck(TreeNode * syntaxTree)
 	SPush(stack, cmd);
 	traverse(syntaxTree,push_scope,checkNode);
 	SPop(stack);
-	if(TraceAnalyze)
-	{
-		fprintf(listing, "\nSymbol table:\n\n");
-		printSymTab(listing);
-	}
 }

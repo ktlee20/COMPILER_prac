@@ -7,7 +7,7 @@ void idxtest(void)
 
 int idxtestb(void)
 {
-	return 1;
+	return idxtestb();
 }
 /*noerror*/
 
@@ -73,3 +73,10 @@ void xtest(void)
 	return;
 }
 /* 73 error */
+
+void indexOpTest(void)
+{
+	int x[10];
+	int a;
+	a = x[1] + x[2]; 
+}
