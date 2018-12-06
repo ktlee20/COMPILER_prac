@@ -6,6 +6,7 @@
 
 char * funname;
 int scopemade = 0;
+int funexist = 0;
 
 static void traverse(TreeNode * t, void(*preProc) (TreeNode*), void (*postProc) (TreeNode*))
 {
@@ -84,22 +85,15 @@ static void insertNode( TreeNode * t)
 			switch (t->kind.stmt)
 			{
 				case CompK:
-					if(scopemade)
-					{
-						scopemade = 0;
-					}
-					else
-					{
-						Scope scope = sc_insert(funname, t);
-						SPush(stack, funname);
-					}
-					t->attr.scope = SPeek(stack);
-					break;	
 				case IfK:
 				case IterK:
 					if(scopemade)
 					{
 						scopemade = 0;
+					}
+					else if(funexist)
+					{
+						funexist = 0;
 					}
 					else
 					{
@@ -145,6 +139,7 @@ static void insertNode( TreeNode * t)
 					if(bc_lookup(SPeek(stack), funname) != NULL)
 					{
 						symbolError(t, "function exists");
+						funexist = 1;			
 						break;
 					}
 					switch(t->child[0]->attr.type)
@@ -272,7 +267,8 @@ static void push_scope(TreeNode *t)
 			switch(t->kind.stmt)
 			{
 				case CompK:
-					SPush(stack, t->attr.scope);
+					if(t->attr.scope != NULL)
+						SPush(stack, t->attr.scope);
 				break;
 				default:
 				break;
@@ -308,7 +304,8 @@ static void checkNode(TreeNode *t)
 			switch (t->kind.stmt)
 			{
 				case CompK:
-					SPop(stack);	
+					if(stack->head->data[0] != '~');
+						SPop(stack);	
 				break;
 				case RetK:
 				{
